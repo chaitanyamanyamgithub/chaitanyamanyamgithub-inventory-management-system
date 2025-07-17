@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Ledger - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-book me-2"></i> Stock Ledger for {{ product.name }} ({{ product.category_name }})</h5>
+            <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="txn_type" class="form-label">Transaction Type</label>
+                    <select class="form-select" id="txn_type" name="txn_type">
+                        <option value="both" {% if txn_type == 'both' %}selected{% endif %}>Both</option>
+                        <option value="purchase" {% if txn_type == 'purchase' %}selected{% endif %}>Purchase</option>
+                        <option value="sale" {% if txn_type == 'sale' %}selected{% endif %}>Sale</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </form>
+            <div class="mb-3">
+                <strong>Opening Stock:</strong> {{ opening_stock }} {{ product.unit }}<br>
+                <strong>Closing Stock:</strong> {{ closing_stock }} {{ product.unit }}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Opening Stock</th>
+                            <th>Purchased</th>
+                            <th>Sold</th>
+                            <th>Closing Stock</th>
+                            <th>Reference</th>
+                            <th>Party</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if txns %}
+                            {% for txn in txns %}
+                            <tr>
+                                <td>{{ txn.date.strftime('%d-%m-%Y') if txn.date else '' }}</td>
+                                <td>{{ txn.txn_type|capitalize }}</td>
+                                <td>{{ txn.opening_stock }}</td>
+                                <td>{{ txn.purchased }}</td>
+                                <td>{{ txn.sold }}</td>
+                                <td>{{ txn.closing_stock }}</td>
+                                <td>
+                                    {% if txn.txn_type == 'purchase' %}
+                                        <a href="{{ url_for('purchases.view', id=txn.ref_id) }}" target="_blank">{{ txn.reference_number }}</a>
+                                    {% else %}
+                                        <a href="{{ url_for('sales.view', id=txn.ref_id) }}" target="_blank">{{ txn.reference_number }}</a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if txn.txn_type == 'purchase' %}
+                                        {{ txn.supplier_name }}
+                                    {% else %}
+                                        {{ txn.customer_name or 'Walk-in Customer' }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-3">No transactions found for this product.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice #{{ sale.invoice_number }} - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            <div class="no-print mb-3">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Sales
+                    </a>
+                    <div>
+                        <button onclick="printContent()" class="btn btn-primary">
+                            <i class="fas fa-print"></i> Print Invoice
+                        </button>
+                        
+                        <button onclick="confirmDelete('{{ url_for('sales.delete', id=sale.id) }}')" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="invoice-container">
+                <!-- Invoice Header -->
+                <div class="invoice-header">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h1>INVOICE</h1>
+                            <h5>Invoice #: {{ sale.invoice_number }}</h5>
+                            <p>Date: {{ sale.sale_date.strftime('%d %B, %Y') }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            {% if business_info %}
+                                <h3>{{ business_info.business_name }}</h3>
+                                <p>
+                                    {{ business_info.address }}<br>
+                                    Phone: {{ business_info.phone }}<br>
+                                    Email: {{ business_info.email }}<br>
+                                    GST: {{ business_info.gst_number }}
+                                </p>
+                            {% else %}
+                                <h3>{{ company_info.company_name }}</h3>
+                                <p>
+                                    {{ company_info.address }}<br>
+                                    Phone: {{ company_info.phone }}<br>
+                                    Email: {{ company_info.email }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Customer Information -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="invoice-customer-details">
+                            <h5>Bill To:</h5>
+                            {% if sale.customer_name %}
+                            <p>
+                                <strong>{{ sale.customer_name }}</strong><br>
+                                {% if sale.customer_address %}{{ sale.customer_address }}<br>{% endif %}
+                                {% if sale.customer_phone %}Phone: {{ sale.customer_phone }}{% endif %}
+                            </p>
+                            {% else %}
+                            <p>Walk-in Customer</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p>
+                            <strong>Created By:</strong> {{ sale.user_name }}<br>
+                            <strong>Created On:</strong> {{ sale.created_at.strftime('%d %B, %Y %H:%M') }}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Invoice Items -->
+                <div class="table-responsive mt-4">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th class="text-end">Quantity</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.product_name }}</td>
+                                <td class="text-end">{{ item.quantity }} {{ item.unit }}</td>
+                                <td class="text-end">₹{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td class="text-end">₹{{ "%.2f"|format(item.total_price) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="4" class="text-end">Total Amount:</th>
+                                <th class="text-end">₹{{ "%.2f"|format(sale.total_amount) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <!-- Notes and Terms -->
+                <div class="row mt-4">
+                    {% if sale.notes %}
+                    <div class="col-md-6">
+                        <h5>Notes:</h5>
+                        <p>{{ sale.notes }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <h5>Terms and Conditions:</h5>
+                        <ol>
+                            <li>All items sold are non-returnable.</li>
+                            <li>Payment is due within 30 days.</li>
+                            <li>Warranty as per manufacturer terms.</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- Signature -->
+                <div class="row mt-5">
+                    <div class="col-md-6">
+                        <p class="mt-5">
+                            _______________________<br>
+                            Customer Signature
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p class="mt-5">
+                            _______________________<br>
+                            For {{ company_info.company_name }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

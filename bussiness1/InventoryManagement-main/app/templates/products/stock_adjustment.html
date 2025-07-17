@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Adjustment - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-boxes me-2"></i> Stock Adjustment</h5>
+            <a href="{{ url_for('inventory.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Inventory
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Product Details</h6>
+                    <p><strong>Name:</strong> {{ product.name }}</p>
+                    <p><strong>Current Stock:</strong> {{ product.current_stock }} {{ product.unit }}</p>
+                    <p><strong>Minimum Stock Level:</strong> {{ product.min_stock_level }} {{ product.unit }}</p>
+                </div>
+                <div class="col-md-6">
+                    <form method="post" action="{{ url_for('products.stock_adjustment', id=product.id) }}">
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Adjustment Quantity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" required>
+                            <div class="form-text">Use positive value to increase stock, negative to decrease.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Adjustment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-history me-2"></i> Adjustment History</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Quantity</th>
+                            <th>Reason</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if history %}
+                            {% for item in history %}
+                            <tr>
+                                <td>{{ item.adjustment_date.strftime('%d-%m-%Y') if item.adjustment_date else '' }}</td>
+                                <td>
+                                    {% if item.quantity > 0 %}
+                                    <span class="text-success">+{{ item.quantity }}</span>
+                                    {% else %}
+                                    <span class="text-danger">{{ item.quantity }}</span>
+                                    {% endif %}
+                                    {{ product.unit }}
+                                </td>
+                                <td>{{ item.reason }}</td>
+                                <td>{{ item.username }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3">No adjustment history found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

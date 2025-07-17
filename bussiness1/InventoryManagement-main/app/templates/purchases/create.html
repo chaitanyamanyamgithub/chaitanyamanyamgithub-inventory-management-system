@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Purchase - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-shopping-cart me-2"></i> New Purchase</h5>
+            <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Purchases
+            </a>
+        </div>
+        <div class="card-body">
+            <form id="purchaseForm" method="post" action="{{ url_for('purchases.create') }}">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="supplier_id" class="form-label">Supplier <span class="text-danger">*</span></label>
+                        <select class="form-select" id="supplier_id" name="supplier_id" required>
+                            <option value="">Select Supplier</option>
+                            {% for supplier in suppliers %}
+                                <option value="{{ supplier.id }}" {% if selected_supplier_id|string == supplier.id|string %}selected{% endif %}>
+                                    {{ supplier.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="purchase_date" class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="purchase_date" name="purchase_date" value="{{ today }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="reference_number" class="form-label">Reference Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="reference_number" name="reference_number" placeholder="PO-YYYYMMDD-001" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">Purchase Items</h5>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <label for="product_id" class="form-label mb-0">Select Product</label>
+                                        <div class="input-group">
+                                            <select class="form-select" id="product_id">
+                                                <option value="">Select Product</option>
+                                                {% for product in products %}
+                                                    <option value="{{ product.id }}" data-price="{{ product.purchase_price }}" data-unit="{{ product.unit }}">
+                                                        {{ product.name }} ({{ product.category_name }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <a href="{{ url_for('products.create') }}" class="btn btn-outline-success" title="Add New Product" target="_blank">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="product_price" class="form-label mb-0">Unit Price</label>
+                                        <input type="number" class="form-control" id="product_price" min="0" step="0.01" placeholder="0.00">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="product_quantity" class="form-label mb-0">Quantity</label>
+                                        <input type="number" class="form-control" id="product_quantity" min="0.01" step="0.01" placeholder="0">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="product_unit" class="form-label mb-0">Unit</label>
+                                        <input type="text" class="form-control" id="product_unit" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-0">&nbsp;</label>
+                                        <button type="button" class="btn btn-primary w-100" id="add_product">
+                                            <i class="fas fa-plus"></i> Add Item
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0" id="purchase_items_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Unit Price</th>
+                                                <th>Quantity</th>
+                                                <th>Unit</th>
+                                                <th>Total</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="purchase_items_body">
+                                            <tr id="no_items_row">
+                                                <td colspan="6" class="text-center py-3">No items added yet</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th colspan="4" class="text-end">Grand Total:</th>
+                                                <th id="grand_total">₹0.00</th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="items" id="items_json">
+                <input type="hidden" name="total_amount" id="total_amount">
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-lg btn-success" id="save_purchase">
+                        <i class="fas fa-save"></i> Save Purchase
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Global variables
+        let items = [];
+        let grandTotal = 0;
+        
+        // Product selection change handler
+        document.getElementById('product_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const price = selectedOption.getAttribute('data-price');
+                const unit = selectedOption.getAttribute('data-unit');
+                
+                document.getElementById('product_price').value = price;
+                document.getElementById('product_unit').value = unit;
+                document.getElementById('product_quantity').value = "1";
+            } else {
+                document.getElementById('product_price').value = "";
+                document.getElementById('product_unit').value = "";
+                document.getElementById('product_quantity').value = "";
+            }
+        });
+        
+        // Add item button handler
+        document.getElementById('add_product').addEventListener('click', function() {
+            const productSelect = document.getElementById('product_id');
+            const productId = productSelect.value;
+            
+            if (!productId) {
+                alert('Please select a product');
+                return;
+            }
+            
+            const productName = productSelect.options[productSelect.selectedIndex].text;
+            const price = parseFloat(document.getElementById('product_price').value);
+            const quantity = parseFloat(document.getElementById('product_quantity').value);
+            const unit = document.getElementById('product_unit').value;
+            
+            if (isNaN(price) || price <= 0) {
+                alert('Please enter a valid price');
+                return;
+            }
+            
+            if (isNaN(quantity) || quantity <= 0) {
+                alert('Please enter a valid quantity');
+                return;
+            }
+            
+            // Check if product already exists in the list
+            const existingItem = items.find(item => item.product_id === productId);
+            if (existingItem) {
+                if (confirm('This product is already in the list. Do you want to update the quantity and price?')) {
+                    existingItem.quantity = quantity;
+                    existingItem.unit_price = price;
+                    existingItem.total = (quantity * price).toFixed(2);
+                } else {
+                    return;
+                }
+            } else {
+                // Add new item
+                const item = {
+                    product_id: productId,
+                    product_name: productName,
+                    unit_price: price,
+                    quantity: quantity,
+                    unit: unit,
+                    total: (quantity * price).toFixed(2)
+                };
+                items.push(item);
+            }
+            
+            updateItemsTable();
+            
+            // Reset form
+            productSelect.value = "";
+            document.getElementById('product_price').value = "";
+            document.getElementById('product_quantity').value = "";
+            document.getElementById('product_unit').value = "";
+        });
+        
+        // Function to remove item
+        function removeItem(index) {
+            items.splice(index, 1);
+            updateItemsTable();
+        }
+        
+        // Add event delegation for remove buttons
+        document.getElementById('purchase_items_body').addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-remove-item') || e.target.parentElement.classList.contains('btn-remove-item')) {
+                const button = e.target.classList.contains('btn-remove-item') ? e.target : e.target.parentElement;
+                const index = button.getAttribute('data-index');
+                removeItem(index);
+            }
+        });
+        
+        // Function to update the items table
+        function updateItemsTable() {
+            const tbody = document.getElementById('purchase_items_body');
+            const noItemsRow = document.getElementById('no_items_row');
+            
+            // Clear table
+            tbody.innerHTML = '';
+            
+            grandTotal = 0;
+            
+            if (items.length === 0) {
+                tbody.appendChild(noItemsRow);
+            } else {
+                items.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${item.product_name}</td>
+                        <td>₹${parseFloat(item.unit_price).toFixed(2)}</td>
+                        <td>${parseFloat(item.quantity).toFixed(2)}</td>
+                        <td>${item.unit}</td>
+                        <td>₹${parseFloat(item.total).toFixed(2)}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger btn-remove-item" data-index="${index}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                    grandTotal += parseFloat(item.total);
+                });
+            }
+            
+            // Update grand total
+            document.getElementById('grand_total').textContent = `₹${grandTotal.toFixed(2)}`;
+            document.getElementById('total_amount').value = grandTotal.toFixed(2);
+            document.getElementById('items_json').value = JSON.stringify(items);
+        }
+        
+        // Form submission handler
+        document.getElementById('purchaseForm').addEventListener('submit', function(e) {
+            if (items.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one item to the purchase');
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Generate reference number
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        
+        document.getElementById('reference_number').value = `PO-${year}${month}${day}-${randomNum}`;
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Purchases - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-shopping-cart me-2"></i> Purchase Records</h5>
+            <a href="{{ url_for('purchases.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Purchase
+            </a>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="card-body pb-0">
+            <form method="get" action="{{ url_for('purchases.index') }}" class="row g-3">
+                <div class="col-md-2">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ filters.start_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ filters.end_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="supplier_id" class="form-label">Supplier</label>
+                    <select class="form-select" id="supplier_id" name="supplier_id">
+                        <option value="">All Suppliers</option>
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}" {% if filters.supplier_id|string == supplier.id|string %}selected{% endif %}>
+                                {{ supplier.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Reference number or supplier" value="{{ filters.search }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a href="{{ url_for('purchases.index', start_date=filters.start_date, end_date=filters.end_date, supplier_id=filters.supplier_id, search=filters.search, sort_by='id', sort_order='asc' if sort_by != 'id' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    #
+                                    {% if sort_by == 'id' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('purchases.index', start_date=filters.start_date, end_date=filters.end_date, supplier_id=filters.supplier_id, search=filters.search, sort_by='purchase_date', sort_order='asc' if sort_by != 'purchase_date' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Date
+                                    {% if sort_by == 'purchase_date' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('purchases.index', start_date=filters.start_date, end_date=filters.end_date, supplier_id=filters.supplier_id, search=filters.search, sort_by='reference_number', sort_order='asc' if sort_by != 'reference_number' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Reference No.
+                                    {% if sort_by == 'reference_number' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('purchases.index', start_date=filters.start_date, end_date=filters.end_date, supplier_id=filters.supplier_id, search=filters.search, sort_by='supplier_name', sort_order='asc' if sort_by != 'supplier_name' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Supplier
+                                    {% if sort_by == 'supplier_name' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('purchases.index', start_date=filters.start_date, end_date=filters.end_date, supplier_id=filters.supplier_id, search=filters.search, sort_by='total_amount', sort_order='asc' if sort_by != 'total_amount' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Total Amount
+                                    {% if sort_by == 'total_amount' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('purchases.index', start_date=filters.start_date, end_date=filters.end_date, supplier_id=filters.supplier_id, search=filters.search, sort_by='item_count', sort_order='asc' if sort_by != 'item_count' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Items
+                                    {% if sort_by == 'item_count' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if purchases %}
+                            {% for purchase in purchases %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ purchase.purchase_date.strftime('%d-%m-%Y') if purchase.purchase_date else '' }}</td>
+                                <td>{{ purchase.reference_number }}</td>
+                                <td>{{ purchase.supplier.name if purchase.supplier else '' }}</td>
+                                <td>₹{{ "%.2f"|format(purchase.total_amount) }}</td>
+                                <td>{{ purchase.items|length }}</td>
+                                <td>
+                                    <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-sm btn-info btn-action" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button data-delete-url="{{ url_for('purchases.delete', id=purchase.id) }}" class="btn btn-sm btn-danger btn-action delete-btn" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-3">No purchase records found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this purchase record? This action will remove all purchase items and adjust inventory stock levels.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all delete buttons
+        document.querySelectorAll('.delete-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var url = this.getAttribute('data-delete-url');
+                confirmDelete(url);
+            });
+        });
+    });
+
+    function confirmDelete(url) {
+        document.getElementById('deleteForm').setAttribute('action', url);
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+</script>
+{% endblock %} 

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Product - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-edit me-2"></i> Edit Product</h5>
+            <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('products.edit', id=product.id) }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ product.name }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Select Category</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="purchase_price" class="form-label">Purchase Price <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" id="purchase_price" name="purchase_price" 
+                                  min="0" step="0.01" value="{{ product.purchase_price }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="selling_price" class="form-label">Selling Price <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" id="selling_price" name="selling_price" 
+                                  min="0" step="0.01" value="{{ product.selling_price }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="unit" class="form-label">Unit <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="unit" name="unit" value="{{ product.unit }}" required>
+                        <div class="form-text">e.g., kg, bag, liter, etc.</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="min_stock_level" class="form-label">Minimum Stock Level</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="min_stock_level" name="min_stock_level" 
+                                  min="0" step="0.01" value="{{ product.min_stock_level }}">
+                            <span class="input-group-text">{{ product.unit }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="current_stock" class="form-label">Current Stock (Read Only)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="current_stock" value="{{ product.current_stock }}" readonly>
+                            <span class="input-group-text">{{ product.unit }}</span>
+                        </div>
+                        <div class="form-text">Use stock adjustment to change current stock level.</div>
+                    </div>
+                </div>
+                
+                <div class="text-end mt-4">
+                    <a href="{{ url_for('products.stock_adjustment', id=product.id) }}" class="btn btn-warning me-2">
+                        <i class="fas fa-boxes"></i> Adjust Stock
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Inventory Management System{% endblock %}
+
+{% block custom_css %}
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        background: url('https://images.unsplash.com/photo-1515168833906-d2a3b82b302b?auto=format&fit=crop&w=1200&q=80');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    .login-container {
+        max-width: 500px;
+        width: 100%;
+        padding: 30px;
+        margin: auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .login-card {
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 10px;
+    }
+    
+    .login-header {
+        text-align: center;
+        padding: 35px 0;
+    }
+    
+    .login-icon {
+        font-size: 56px;
+        color: #198754;
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 5px;
+    }
+
+    .btn-success {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card login-card">
+        <div class="card-body">
+            <div class="login-header">
+                <i class="fas fa-boxes login-icon"></i>
+                <h2 class="mb-3">InventroX Management Systems</h2>
+                <p class="text-muted">Management System</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success">Login</button>
+                </div>
+            </form>
+            <div class="d-grid mt-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Registration Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="registerModalLabel">Business Registration</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="business_name" class="form-label">Business Name</label>
+            <input type="text" class="form-control" id="business_name" name="business_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="phone" name="phone" required>
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Address</label>
+            <textarea class="form-control" id="address" name="address" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="gst_number" class="form-label">GST Number</label>
+            <input type="text" class="form-control" id="gst_number" name="gst_number" required>
+          </div>
+          <div class="mb-3">
+            <label for="full_name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="full_name" name="full_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="reg_username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="reg_username" name="reg_username" required>
+          </div>
+          <div class="mb-3">
+            <label for="reg_password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="reg_password" name="reg_password" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} 

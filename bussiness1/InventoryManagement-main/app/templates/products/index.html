@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-leaf me-2"></i> Products</h5>
+            <a href="{{ url_for('products.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add New Product
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>
+                                <a href="{{ url_for('products.index', sort_by='name', sort_order='asc' if sort_by != 'name' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Name
+                                    {% if sort_by == 'name' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('products.index', sort_by='category_id', sort_order='asc' if sort_by != 'category_id' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Category
+                                    {% if sort_by == 'category_id' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('products.index', sort_by='purchase_price', sort_order='asc' if sort_by != 'purchase_price' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Purchase Price
+                                    {% if sort_by == 'purchase_price' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ url_for('products.index', sort_by='selling_price', sort_order='asc' if sort_by != 'selling_price' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Selling Price
+                                    {% if sort_by == 'selling_price' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>Unit</th>
+                            <th>
+                                <a href="{{ url_for('products.index', sort_by='current_stock', sort_order='asc' if sort_by != 'current_stock' or sort_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none">
+                                    Current Stock
+                                    {% if sort_by == 'current_stock' %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort text-muted"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if products %}
+                            {% for product in products %}
+                            <tr class="{% if product.current_stock <= product.min_stock_level %}low-stock{% endif %}">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.category.name }}</td>
+                                <td>₹{{ "%.2f"|format(product.purchase_price) }}</td>
+                                <td>₹{{ "%.2f"|format(product.selling_price) }}</td>
+                                <td>{{ product.unit }}</td>
+                                <td>
+                                    {{ product.current_stock }} {{ product.unit }}
+                                    {% if product.current_stock <= product.min_stock_level %}
+                                    <span class="badge bg-danger">Low Stock</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-sm btn-info btn-action" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('products.stock_adjustment', id=product.id) }}" class="btn btn-sm btn-warning btn-action" title="Adjust Stock">
+                                        <i class="fas fa-boxes"></i>
+                                    </a>
+                                    <a href="{{ url_for('products.ledger', product_id=product.id) }}" class="btn btn-sm btn-secondary" title="Stock Ledger">
+                                        <i class="fas fa-book"></i> Ledger
+                                    </a>
+                                    <form method="post" action="{{ url_for('products.delete', id=product.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                        <button type="submit" class="btn btn-sm btn-danger btn-action" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-3">No products found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this product? This action cannot be undone.
+                <p class="text-danger mt-2"><strong>Note:</strong> Products with sales or purchase records cannot be deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all delete buttons
+        document.querySelectorAll('.delete-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var url = this.getAttribute('data-delete-url');
+                confirmDelete(url);
+            });
+        });
+    });
+
+    function confirmDelete(url) {
+        document.getElementById('deleteForm').setAttribute('action', url);
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+</script>
+{% endblock %} 
